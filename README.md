@@ -15,3 +15,5 @@ certainly overwrite any changes you might have made locally:
 cd wp-content/mu-plugins
 wget https://github.com/literatecomputing/wc-bhl/raw/master/discourse-woocommerce-functions.php
 ```
+
+If you don't have ssh access to your site, then you can put [this file](https://github.com/literatecomputing/wc-bhl/raw/master/discourse-woocommerce-functions.php) into your `mu-plugins` directory or add the same code to your `functions.php`.
