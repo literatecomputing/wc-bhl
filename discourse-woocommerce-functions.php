@@ -2,11 +2,13 @@
 
 /**
  * Plugin Name: Discourse WooCommerce Sync
- * Plugin URI: http://github/paviliondev/discourse-woocommerce-sync
+ * Plugin URI: http://github/literatecomputing/discourse-woocommerce
  * Description: Syncs WooCommerce memberships with Discourse groups
- * Version: 0.2.5
- * Author: Angus McLeod
- * Author URI: http://thepavilion.io
+ * Version: 0.1
+ * Author: Jay Pfaffman
+ * Author URI: http://www.literatecomputing.com/
+ * Original Author: Angus McLeod
+ * Original Author URI: http://thepavilion.io
  */
 
 defined( 'ABSPATH' ) or die( 'No scripts' );
@@ -23,13 +25,13 @@ const INACTIVE_STATUSES = array('wcm-expired', 'wcm-cancelled');
 function get_discourse_group_id($plan_id) {
 	global $member_group_map;
 	$group_id = nil;
-		
-	foreach($member_group_map as $item) {		
+
+	foreach($member_group_map as $item) {
     if ($plan_id == $item->plan_id) {
 				$group_id = $item->group_id;
     }
 	}
-		
+
 	return $group_id;
 }
 
@@ -43,7 +45,7 @@ function update_discourse_group_access($user_id, $plan_id, $plan_name, $status, 
 	if ( empty( $base_url ) || empty( $api_key ) || empty( $api_username ) ) {
 	  return new \WP_Error( 'discourse_configuration_error', 'The WP Discourse plugin has not been properly configured.' );
 	}
-	
+
 	$logger->info( sprintf('Updating discourse group access %s %s %s %s %s', $user_id, $plan_id, $plan_name, $status, $group_id) );
 
 	if (in_array($status, ACTIVE_STATUSES)) {
@@ -55,26 +57,26 @@ function update_discourse_group_access($user_id, $plan_id, $plan_name, $status, 
 	}
 
 	$external_url = esc_url_raw( $base_url . "/groups/". $group_id ."/members" );
-	
+
 	$user_info = get_userdata($user_id);
 	$discourse_user_id = $user_info->user_id;
 	$user_email = $user_info->user_email;
-	
+
 	$body = array();
-	
+
 	if ($discourse_user_id) {
 		$body['user_id'] = $discourse_user_id;
 	} else {
 		$body['user_emails'] = $user_email;
 	}
-	
+
 	$headers = array(
 		'Content-type' => 'application/json',
 		'Accept'			 => 'application/json',
 		'Api-Key'      => $api_key,
 		'Api-Username' => $api_username,
 	);
-	
+
 	$logger->info( sprintf('Sending %s request to %s with headers %s and body %s', $action, $external_url, json_encode($headers), json_encode($body)) );
 
 	$response = wp_remote_request($external_url,
@@ -101,7 +103,7 @@ function handle_wc_membership_saved($membership_plan, $args) {
 	$membership = wc_memberships_get_user_membership($args['user_membership_id']);
 	$plan_id = $membership->plan->id;
 	$is_update = $args['is_update'];
-	
+
 	$group_id = get_discourse_group_id($plan_id);
 
 	if ($membership && $group_id && $is_update) {
@@ -129,13 +131,13 @@ function full_wc_membership_sync() {
 
 	foreach ( $allusers as $user ) {
 		$user_id = $user->id;
-		
+
 		foreach ( $member_group_map as $item ) {
 			$membership = wc_memberships_get_user_membership($user_id, $item->plan_id);
 			$plan_id = $membership->plan->id;
 
 			$logger->info( sprintf('Checking membership of %s', $user->user_login) );
-			
+
 			$group_id = get_discourse_group_id($plan_id);
 
 			if ($membership && $group_id) {
